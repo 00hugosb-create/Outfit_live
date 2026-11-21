@@ -1,0 +1,4 @@
+Archivos no incluidos en este archivo zip porque no se pudieron encontrar:
+- outputs/outfit-live/logo.svg
+
+Para obtener un archivo de esta lista, hay que pedirle a Claude que lo genere de nuevo en el chat original.
