@@ -71,6 +71,7 @@ export default function Home() {
       supabase.from('week_plan').select('*'),
       supabase.from('favorites').select('*').order('id', { ascending: false }),
     ])
+    if (a.error) setMsg('No se pueden leer las prendas: ' + a.error.message)
     setItems(a.data || [])
     setWk(Object.fromEntries((b.data || []).map((r) => [r.day, r.item_ids])))
     setFavs(c.data || [])
@@ -116,7 +117,11 @@ export default function Home() {
     const path = `${crypto.randomUUID()}.${ext}`
     const up = await supabase.storage.from('prendas').upload(path, file, { contentType: file.type })
     if (up.error) return setMsg(up.error.message)
-    await supabase.from('items').insert({ category: f.cat.value, color: f.color.value, name: f.nombre.value.slice(0, 80), photo: path })
+    const ins = await supabase.from('items').insert({ category: f.cat.value, color: f.color.value, name: f.nombre.value.slice(0, 80), photo: path })
+    if (ins.error) {
+      await supabase.storage.from('prendas').remove([path])
+      return setMsg('No se pudo guardar la prenda: ' + ins.error.message)
+    }
     f.reset(); setMsg(''); load()
   }
   const delItem = async (i) => {
