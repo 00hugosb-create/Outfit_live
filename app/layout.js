@@ -1,5 +1,5 @@
 import './globals.css'
-export const metadata = { title: 'Outfit Live', description: 'Tus outfits de la semana' }
+export const metadata = { title: 'Outfit Live', description: 'Tus outfits de la semana', appleWebApp: { capable: true, title: 'Outfit Live' } }
 export const viewport = { width: 'device-width', initialScale: 1, themeColor: '#ab6cc4' }
 export default function RootLayout({ children }) {
   return (
