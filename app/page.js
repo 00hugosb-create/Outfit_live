@@ -3,10 +3,10 @@ import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 const CATS = { camiseta: 'Camisetas', sudadera: 'Sudaderas', pantalon: 'Pantalones', chaqueta: 'Chaquetas', calzado: 'Calzado' }
-const COLORS = { negro: '#1e1e24', blanco: '#fafafa', gris: '#9a9aa5', beige: '#d9c7a7', denim: '#5b7ba6', marron: '#7a5338', rosa: '#ffa3da', lila: '#ab6cc4', verde: '#90d870', azul: '#3d63d6', rojo: '#d6403d', amarillo: '#f2d13b' }
+const COLORS = { negro: '#1e1e24', blanco: '#fafafa', gris: '#9a9aa5', beige: '#d9c7a7', denim: '#5b7ba6', marron: '#7a5338', rosa: '#ffa3da', lila: '#ab6cc4', verde: '#90d870', azul: '#3d63d6', rojo: '#d6403d', amarillo: '#f2d13b', naranja: '#ff9a3c' }
 const NEUTRAL = ['negro', 'blanco', 'gris', 'beige', 'denim', 'marron']
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
-const HARMONY = [['rosa', 'lila'], ['lila', 'verde'], ['rosa', 'verde'], ['azul', 'amarillo']]
+const HARMONY = [['rosa', 'lila'], ['lila', 'verde'], ['rosa', 'verde'], ['azul', 'amarillo'], ['azul', 'naranja']]
 const SHOP = [
   ['pantalon', 'beige', 'Pantalón cargo oversize beige: base del look coreano, combina con todo.'],
   ['pantalon', 'negro', 'Pantalón ancho negro de pernera recta, estilo "wide fit".'],
@@ -186,6 +186,12 @@ export default function Home() {
     await supabase.storage.from('prendas').remove([i.photo])
     setSheet({ ...i, photo: path }); setMsg(''); load()
   }
+  const changeColor = async (i, color) => {
+    if (color === i.color) return
+    const { error } = await supabase.from('items').update({ color }).eq('id', i.id)
+    if (error) return setMsg('No se pudo cambiar el color: ' + error.message)
+    setSheet({ ...i, color }); setMsg(''); load()
+  }
   const delItem = async (i) => {
     if (!window.confirm('¿Eliminar esta prenda?')) return
     await supabase.storage.from('prendas').remove([i.photo])
@@ -355,7 +361,12 @@ export default function Home() {
             </>) : (<>
               <img className="big" src={photoUrl(sheet.photo)} alt={sheet.name || CATS[sheet.category]} />
               <h2><span className="dot" style={{ background: COLORS[sheet.color] }} /> {sheet.name || CATS[sheet.category]}</h2>
-              <p className="sub">{CATS[sheet.category]} · {sheet.color}</p>
+              <p className="sub" style={{ marginBottom: 8 }}>{CATS[sheet.category]} · {sheet.color}</p>
+              <div className="pal" role="radiogroup" aria-label="Color de la prenda">
+                {Object.entries(COLORS).map(([k, hex]) => (
+                  <button key={k} role="radio" aria-checked={sheet.color === k} aria-label={k} title={k} className={sheet.color === k ? 'on' : ''} style={{ background: hex }} onClick={() => changeColor(sheet, k)} />
+                ))}
+              </div>
               {msg && <p className="err">{msg}</p>}
               <div className="acts">
                 <label className="btnlike ok">Cambiar foto<input type="file" accept="image/*" hidden onChange={(e) => { replacePhoto(sheet, e.target.files[0]); e.target.value = '' }} /></label>
