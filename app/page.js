@@ -172,6 +172,20 @@ export default function Home() {
     }
     setSheet(null); setMsg(''); load()
   }
+  const replacePhoto = async (i, file) => {
+    if (!file || file.size > 8e6) return setMsg('Elige una foto de máximo 8 MB.')
+    const ext = (file.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')
+    const path = `${crypto.randomUUID()}.${ext}`
+    const up = await supabase.storage.from('prendas').upload(path, file, { contentType: file.type })
+    if (up.error) return setMsg(up.error.message)
+    const upd = await supabase.from('items').update({ photo: path }).eq('id', i.id)
+    if (upd.error) {
+      await supabase.storage.from('prendas').remove([path])
+      return setMsg('No se pudo cambiar la foto: ' + upd.error.message)
+    }
+    await supabase.storage.from('prendas').remove([i.photo])
+    setSheet({ ...i, photo: path }); setMsg(''); load()
+  }
   const delItem = async (i) => {
     if (!window.confirm('¿Eliminar esta prenda?')) return
     await supabase.storage.from('prendas').remove([i.photo])
@@ -235,7 +249,7 @@ export default function Home() {
           <div className="tiles">
             <button className="tile add" onClick={() => { setMsg(''); setSheet('add') }}><Ico n="plus" s={26} />Añadir foto</button>
             {shown.map((i) => (
-              <button className="tile" key={i.id} onClick={() => setSheet(i)} aria-label={i.name || CATS[i.category]}>
+              <button className="tile" key={i.id} onClick={() => { setMsg(''); setSheet(i) }} aria-label={i.name || CATS[i.category]}>
                 <img src={photoUrl(i.photo)} alt="" loading="lazy" />
                 <span className="dot" style={{ background: COLORS[i.color] }} />
               </button>
@@ -342,7 +356,12 @@ export default function Home() {
               <img className="big" src={photoUrl(sheet.photo)} alt={sheet.name || CATS[sheet.category]} />
               <h2><span className="dot" style={{ background: COLORS[sheet.color] }} /> {sheet.name || CATS[sheet.category]}</h2>
               <p className="sub">{CATS[sheet.category]} · {sheet.color}</p>
-              <div className="acts"><button className="ghost" onClick={() => setSheet(null)}>Cerrar</button><button onClick={() => delItem(sheet)}>Eliminar</button></div>
+              {msg && <p className="err">{msg}</p>}
+              <div className="acts">
+                <label className="btnlike ok">Cambiar foto<input type="file" accept="image/*" hidden onChange={(e) => { replacePhoto(sheet, e.target.files[0]); e.target.value = '' }} /></label>
+                <button className="ghost" onClick={() => setSheet(null)}>Cerrar</button>
+                <button onClick={() => delItem(sheet)}>Eliminar</button>
+              </div>
             </>)}
           </div>
         </div>
